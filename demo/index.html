@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stonera — Project Management</title>
+  <meta name="description" content="Stonera — Modern project management for construction and landscape crews">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      /* Linear Design System Tokens */
+      --bg-base: #08090a;
+      --bg-panel: #0f1011;
+      --bg-elevated: #191a1b;
+      --bg-hover: #1e1f20;
+      --bg-active: #232425;
+
+      --accent: #5e6ad2;
+      --accent-interactive: #7170ff;
+      --accent-hover: #828fff;
+      --accent-subtle: rgba(94, 106, 210, 0.15);
+
+      --text-primary: #f7f8f8;
+      --text-secondary: #d0d6e0;
+      --text-tertiary: #8a8f98;
+      --text-quaternary: #6b7079;
+
+      --border-subtle: rgba(255, 255, 255, 0.05);
+      --border-default: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.12);
+
+      --card-bg: rgba(255, 255, 255, 0.02);
+      --card-bg-hover: rgba(255, 255, 255, 0.05);
+
+      --status-done: #4ade80;
+      --status-done-bg: rgba(74, 222, 128, 0.12);
+      --status-progress: #facc15;
+      --status-progress-bg: rgba(250, 204, 21, 0.12);
+      --status-todo: #8a8f98;
+      --status-todo-bg: rgba(138, 143, 152, 0.12);
+      --status-blocked: #f87171;
+      --status-blocked-bg: rgba(248, 113, 113, 0.12);
+
+      --priority-urgent: #ef4444;
+      --priority-high: #f97316;
+      --priority-medium: #facc15;
+      --priority-low: #8a8f98;
+
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+
+      --sidebar-width: 260px;
+      --header-height: 54px;
+    }
+
+    html {
+      font-feature-settings: "cv01", "ss03";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--bg-base);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ===== LAYOUT ===== */
+    .app {
+      display: flex;
+      height: 100vh;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-brand {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .sidebar-brand-logo {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: white;
+      letter-spacing: -0.5px;
+    }
+
+    .sidebar-brand-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+
+    .sidebar-section {
+      padding: 12px 12px 4px;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 510;
+      color: var(--text-quaternary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 4px 8px;
+      margin-bottom: 2px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.12s ease;
+      font-size: 13px;
+      font-weight: 430;
+    }
+
+    .sidebar-item:hover {
+      background: var(--card-bg-hover);
+      color: var(--text-primary);
+    }
+
+    .sidebar-item.active {
+      background: var(--accent-subtle);
+      color: var(--accent-hover);
+    }
+
+    .sidebar-item-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+
+    .sidebar-item.active .sidebar-item-icon {
+      opacity: 1;
+    }
+
+    .sidebar-item-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-quaternary);
+      font-weight: 500;
+      background: var(--card-bg);
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+
+    .sidebar-project-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .sidebar-user {
+      margin-top: auto;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .sidebar-user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar-user-name {
+      font-size: 13px;
+      font-weight: 510;
+      color: var(--text-primary);
+    }
+
+    .sidebar-user-role {
+      font-size: 11px;
+      color: var(--text-quaternary);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      height: var(--header-height);
+      min-height: var(--header-height);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    .header-breadcrumb-sep {
+      color: var(--text-quaternary);
+      font-size: 11px;
+    }
+
+    .header-breadcrumb-current {
+      color: var(--text-primary);
+      font-weight: 510;
+    }
+
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ===== TOOLBAR ===== */
+    .toolbar {
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .toolbar-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 6px 12px;
+      width: 240px;
+      transition: all 0.15s ease;
+    }
+
+    .toolbar-search:focus-within {
+      border-color: var(--accent-interactive);
+      background: var(--bg-elevated);
+    }
+
+    .toolbar-search-icon {
+      color: var(--text-quaternary);
+      flex-shrink: 0;
+    }
+
+    .toolbar-search input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    .toolbar-search input::placeholder {
+      color: var(--text-quaternary);
+    }
+
+    .toolbar-filters {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 480;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .btn-ghost {
+      background: var(--card-bg);
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+    }
+
+    .btn-ghost:hover {
+      background: var(--card-bg-hover);
+      color: var(--text-primary);
+      border-color: var(--border-default);
+    }
+
+    .btn-ghost.active {
+      background: var(--accent-subtle);
+      color: var(--accent-hover);
+      border-color: rgba(94, 106, 210, 0.25);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-interactive);
+    }
+
+    .btn-icon {
+      padding: 5px 6px;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border-default);
+      margin: 0 4px;
+    }
+
+    .toolbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ===== VIEW TABS ===== */
+    .view-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .view-tab {
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 480;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: all 0.12s ease;
+    }
+
+    .view-tab:hover {
+      color: var(--text-secondary);
+      background: var(--card-bg);
+    }
+
+    .view-tab.active {
+      color: var(--text-primary);
+      background: var(--card-bg-hover);
+    }
+
+    /* ===== TASK LIST ===== */
+    .task-list-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    .task-list-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .task-list-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .task-list-container::-webkit-scrollbar-thumb {
+      background: var(--border-default);
+      border-radius: 3px;
+    }
+
+    .task-group {
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .task-group-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 24px;
+      background: var(--bg-panel);
+      cursor: pointer;
+      user-select: none;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .task-group-header:hover {
+      background: var(--bg-elevated);
+    }
+
+    .task-group-chevron {
+      color: var(--text-quaternary);
+      transition: transform 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .task-group-chevron.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .task-group-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .task-group-title {
+      font-size: 13px;
+      font-weight: 510;
+      color: var(--text-primary);
+    }
+
+    .task-group-count {
+      font-size: 11px;
+      color: var(--text-quaternary);
+      font-weight: 500;
+      margin-left: 4px;
+    }
+
+    /* ===== TASK COLUMN HEADERS ===== */
+    .task-columns-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 120px 100px 100px 120px;
+      gap: 0;
+      padding: 4px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-base);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .task-col-header {
+      font-size: 11px;
+      font-weight: 510;
+      color: var(--text-quaternary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .task-col-header:hover {
+      color: var(--text-tertiary);
+    }
+
+    /* ===== TASK ROW ===== */
+    .task-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 120px 100px 100px 120px;
+      gap: 0;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.08s ease;
+      cursor: pointer;
+      align-items: center;
+    }
+
+    .task-row:hover {
+      background: var(--card-bg-hover);
+    }
+
+    .task-cell {
+      padding: 10px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .task-checkbox {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border-strong);
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .task-checkbox:hover {
+      border-color: var(--accent-interactive);
+    }
+
+    .task-checkbox.done {
+      background: var(--status-done);
+      border-color: var(--status-done);
+    }
+
+    .task-checkbox.done::after {
+      content: "✓";
+      font-size: 10px;
+      color: #08090a;
+      font-weight: 700;
+    }
+
+    .task-checkbox.in-progress {
+      border-color: var(--status-progress);
+      background: transparent;
+      position: relative;
+    }
+
+    .task-checkbox.in-progress::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--status-progress);
+    }
+
+    .task-title {
+      font-size: 13px;
+      font-weight: 430;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-title.done {
+      color: var(--text-quaternary);
+      text-decoration: line-through;
+    }
+
+    .task-id {
+      font-size: 11px;
+      color: var(--text-quaternary);
+      font-weight: 500;
+      flex-shrink: 0;
+      font-feature-settings: "tnum";
+    }
+
+    /* ===== STATUS PILL ===== */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 510;
+      white-space: nowrap;
+    }
+
+    .status-pill.done {
+      background: var(--status-done-bg);
+      color: var(--status-done);
+    }
+
+    .status-pill.in-progress {
+      background: var(--status-progress-bg);
+      color: var(--status-progress);
+    }
+
+    .status-pill.todo {
+      background: var(--status-todo-bg);
+      color: var(--status-todo);
+    }
+
+    .status-pill.blocked {
+      background: var(--status-blocked-bg);
+      color: var(--status-blocked);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-dot.done { background: var(--status-done); }
+    .status-dot.in-progress { background: var(--status-progress); }
+    .status-dot.todo { background: var(--status-todo); }
+    .status-dot.blocked { background: var(--status-blocked); }
+
+    /* ===== PRIORITY ===== */
+    .priority-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 510;
+      color: var(--text-tertiary);
+    }
+
+    .priority-bars {
+      display: flex;
+      gap: 1.5px;
+      align-items: flex-end;
+      height: 12px;
+    }
+
+    .priority-bar {
+      width: 3px;
+      border-radius: 1px;
+      background: var(--border-default);
+    }
+
+    .priority-bar.active.urgent { background: var(--priority-urgent); }
+    .priority-bar.active.high { background: var(--priority-high); }
+    .priority-bar.active.medium { background: var(--priority-medium); }
+    .priority-bar.active.low { background: var(--priority-low); }
+
+    /* ===== ASSIGNEE ===== */
+    .assignee {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .assignee-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .assignee-name {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ===== DUE DATE ===== */
+    .due-date {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      white-space: nowrap;
+      font-feature-settings: "tnum";
+    }
+
+    .due-date.overdue {
+      color: var(--priority-urgent);
+    }
+
+    .due-date.soon {
+      color: var(--status-progress);
+    }
+
+    /* ===== SVG ICONS ===== */
+    .icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .icon-sm {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ===== SUMMARY BAR ===== */
+    .summary-bar {
+      padding: 8px 24px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: var(--bg-panel);
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .summary-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .summary-stat-value {
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-feature-settings: "tnum";
+    }
+
+    .summary-progress {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .progress-bar {
+      width: 120px;
+      height: 4px;
+      background: var(--border-default);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-interactive);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-weight: 510;
+      color: var(--text-secondary);
+      font-feature-settings: "tnum";
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .task-row { grid-template-columns: minmax(0, 1fr) 100px 80px; }
+      .task-columns-header { grid-template-columns: minmax(0, 1fr) 100px 80px; }
+      .task-col-header:nth-child(n+4),
+      .task-cell:nth-child(n+4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-logo">S</div>
+        <span class="sidebar-brand-name">Stonera</span>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">General</div>
+        <div class="sidebar-item">
+          <div class="sidebar-item-icon">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+          </div>
+          My Tasks
+          <span class="sidebar-item-count">12</span>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-item-icon">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 1.5"/></svg>
+          </div>
+          Timeline
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-item-icon">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 6h12"/><path d="M5.5 3V1.5M10.5 3V1.5"/></svg>
+          </div>
+          Schedule
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-item-icon">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/><path d="M2 6h12"/><path d="M6 2v12"/></svg>
+          </div>
+          Board
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Projects</div>
+        <div class="sidebar-item active">
+          <div class="sidebar-project-dot" style="background: #5e6ad2;"></div>
+          123 Oak Street
+          <span class="sidebar-item-count">24</span>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-project-dot" style="background: #e5796a;"></div>
+          456 Maple Avenue
+          <span class="sidebar-item-count">18</span>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-project-dot" style="background: #4ade80;"></div>
+          789 Cedar Lane
+          <span class="sidebar-item-count">9</span>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-project-dot" style="background: #facc15;"></div>
+          12 Birch Court
+          <span class="sidebar-item-count">31</span>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-project-dot" style="background: #38bdf8;"></div>
+          55 Willow Drive
+          <span class="sidebar-item-count">14</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Crew</div>
+        <div class="sidebar-item">
+          <div class="sidebar-item-icon">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="5" r="3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/></svg>
+          </div>
+          Team Members
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-item-icon">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 14V9M8 14V5M12 14V2"/></svg>
+          </div>
+          Reports
+        </div>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">EK</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Evan K.</div>
+          <div class="sidebar-user-role">Project Lead</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <!-- HEADER -->
+      <header class="header">
+        <div class="header-breadcrumb">
+          <span>Projects</span>
+          <span class="header-breadcrumb-sep">/</span>
+          <span class="header-breadcrumb-current">123 Oak Street</span>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost btn-icon" title="Notifications">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 6a4 4 0 0 1 8 0c0 4 1.5 5 1.5 5H2.5S4 10 4 6ZM6.5 13a1.5 1.5 0 0 0 3 0"/></svg>
+          </button>
+          <button class="btn btn-primary">
+            <svg class="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+            New Task
+          </button>
+        </div>
+      </header>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="toolbar-search">
+          <svg class="icon-sm toolbar-search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+          <input type="text" placeholder="Search tasks..." />
+        </div>
+
+        <div class="toolbar-filters">
+          <button class="btn btn-ghost">
+            <svg class="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 3h12L9 8.5V13l-2-1V8.5L2 3Z"/></svg>
+            Filter
+          </button>
+          <button class="btn btn-ghost active">
+            <span class="status-dot in-progress" style="width:5px;height:5px;"></span>
+            In Progress
+          </button>
+          <button class="btn btn-ghost">
+            Group
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="view-tabs">
+          <span class="view-tab active">List</span>
+          <span class="view-tab">Board</span>
+          <span class="view-tab">Timeline</span>
+        </div>
+
+        <div class="toolbar-right">
+          <button class="btn btn-ghost btn-icon" title="Sort">
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h8M2 8h5M2 12h3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- COLUMN HEADERS -->
+      <div class="task-columns-header">
+        <div class="task-col-header">Task</div>
+        <div class="task-col-header">Assignee</div>
+        <div class="task-col-header">Status</div>
+        <div class="task-col-header">Priority</div>
+        <div class="task-col-header">Due Date</div>
+      </div>
+
+      <!-- TASK LIST -->
+      <div class="task-list-container">
+
+        <!-- GROUP: IN PROGRESS -->
+        <div class="task-group">
+          <div class="task-group-header">
+            <svg class="task-group-chevron icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3l5 5-5 5"/></svg>
+            <div class="task-group-status-dot" style="background: var(--status-progress);"></div>
+            <span class="task-group-title">In Progress</span>
+            <span class="task-group-count">6</span>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox in-progress"></div>
+              <span class="task-id">STO-142</span>
+              <span class="task-title">Install retaining wall footings — east side</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#5e6ad2;">MR</div>
+                <span class="assignee-name">Marco R.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill in-progress"><span class="status-dot in-progress"></span>In Progress</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active urgent" style="height:4px;"></div>
+                  <div class="priority-bar active urgent" style="height:7px;"></div>
+                  <div class="priority-bar active urgent" style="height:10px;"></div>
+                  <div class="priority-bar active urgent" style="height:12px;"></div>
+                </div>
+                Urgent
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date overdue">Apr 3</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox in-progress"></div>
+              <span class="task-id">STO-138</span>
+              <span class="task-title">Grade and compact base layer for patio area</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#e5796a;">JT</div>
+                <span class="assignee-name">Jake T.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill in-progress"><span class="status-dot in-progress"></span>In Progress</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active high" style="height:4px;"></div>
+                  <div class="priority-bar active high" style="height:7px;"></div>
+                  <div class="priority-bar active high" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                High
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date soon">Apr 7</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox in-progress"></div>
+              <span class="task-id">STO-135</span>
+              <span class="task-title">Run electrical conduit to landscape lighting zones</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#38bdf8;">DS</div>
+                <span class="assignee-name">Dan S.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill in-progress"><span class="status-dot in-progress"></span>In Progress</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active high" style="height:4px;"></div>
+                  <div class="priority-bar active high" style="height:7px;"></div>
+                  <div class="priority-bar active high" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                High
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Apr 10</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox in-progress"></div>
+              <span class="task-id">STO-131</span>
+              <span class="task-title">Pour concrete for front walkway — Phase 2</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#5e6ad2;">MR</div>
+                <span class="assignee-name">Marco R.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill in-progress"><span class="status-dot in-progress"></span>In Progress</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active medium" style="height:4px;"></div>
+                  <div class="priority-bar active medium" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Medium
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Apr 12</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox in-progress"></div>
+              <span class="task-id">STO-128</span>
+              <span class="task-title">Assemble pergola framework — cedar posts</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#4ade80;">AL</div>
+                <span class="assignee-name">Alex L.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill in-progress"><span class="status-dot in-progress"></span>In Progress</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active medium" style="height:4px;"></div>
+                  <div class="priority-bar active medium" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Medium
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Apr 14</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox in-progress"></div>
+              <span class="task-id">STO-125</span>
+              <span class="task-title">Install irrigation main line — zones 1-3</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#e5796a;">JT</div>
+                <span class="assignee-name">Jake T.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill in-progress"><span class="status-dot in-progress"></span>In Progress</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active low" style="height:4px;"></div>
+                  <div class="priority-bar" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Low
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Apr 18</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- GROUP: TO DO -->
+        <div class="task-group">
+          <div class="task-group-header">
+            <svg class="task-group-chevron icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3l5 5-5 5"/></svg>
+            <div class="task-group-status-dot" style="background: var(--status-todo);"></div>
+            <span class="task-group-title">To Do</span>
+            <span class="task-group-count">8</span>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox"></div>
+              <span class="task-id">STO-150</span>
+              <span class="task-title">Order flagstone — 800 sq ft for rear patio</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#facc15;color:#08090a;">NK</div>
+                <span class="assignee-name">Nina K.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill todo"><span class="status-dot todo"></span>To Do</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active urgent" style="height:4px;"></div>
+                  <div class="priority-bar active urgent" style="height:7px;"></div>
+                  <div class="priority-bar active urgent" style="height:10px;"></div>
+                  <div class="priority-bar active urgent" style="height:12px;"></div>
+                </div>
+                Urgent
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date overdue">Apr 4</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox"></div>
+              <span class="task-id">STO-149</span>
+              <span class="task-title">Schedule concrete pump for driveway extension</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#5e6ad2;">MR</div>
+                <span class="assignee-name">Marco R.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill todo"><span class="status-dot todo"></span>To Do</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active high" style="height:4px;"></div>
+                  <div class="priority-bar active high" style="height:7px;"></div>
+                  <div class="priority-bar active high" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                High
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date soon">Apr 8</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox"></div>
+              <span class="task-id">STO-147</span>
+              <span class="task-title">Install drainage catch basins — front yard</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#38bdf8;">DS</div>
+                <span class="assignee-name">Dan S.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill todo"><span class="status-dot todo"></span>To Do</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active medium" style="height:4px;"></div>
+                  <div class="priority-bar active medium" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Medium
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Apr 11</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox"></div>
+              <span class="task-id">STO-145</span>
+              <span class="task-title">Plant privacy hedge — eastern boundary (12 cedars)</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#4ade80;">AL</div>
+                <span class="assignee-name">Alex L.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill todo"><span class="status-dot todo"></span>To Do</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active medium" style="height:4px;"></div>
+                  <div class="priority-bar active medium" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Medium
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Apr 15</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox"></div>
+              <span class="task-id">STO-143</span>
+              <span class="task-title">Build custom fire pit surround — natural stone</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#e5796a;">JT</div>
+                <span class="assignee-name">Jake T.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill todo"><span class="status-dot todo"></span>To Do</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active low" style="height:4px;"></div>
+                  <div class="priority-bar" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Low
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Apr 20</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox"></div>
+              <span class="task-id">STO-141</span>
+              <span class="task-title">Lay sod — rear lawn area (2,400 sq ft)</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#4ade80;">AL</div>
+                <span class="assignee-name">Alex L.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill todo"><span class="status-dot todo"></span>To Do</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active low" style="height:4px;"></div>
+                  <div class="priority-bar" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Low
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Apr 22</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox"></div>
+              <span class="task-id">STO-139</span>
+              <span class="task-title">Install outdoor kitchen gas line and countertop</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#38bdf8;">DS</div>
+                <span class="assignee-name">Dan S.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill todo"><span class="status-dot todo"></span>To Do</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active low" style="height:4px;"></div>
+                  <div class="priority-bar" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Low
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Apr 25</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox"></div>
+              <span class="task-id">STO-137</span>
+              <span class="task-title">Final site cleanup and client walkthrough</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#facc15;color:#08090a;">NK</div>
+                <span class="assignee-name">Nina K.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill todo"><span class="status-dot todo"></span>To Do</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active low" style="height:4px;"></div>
+                  <div class="priority-bar" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Low
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Apr 30</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- GROUP: BLOCKED -->
+        <div class="task-group">
+          <div class="task-group-header">
+            <svg class="task-group-chevron icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3l5 5-5 5"/></svg>
+            <div class="task-group-status-dot" style="background: var(--status-blocked);"></div>
+            <span class="task-group-title">Blocked</span>
+            <span class="task-group-count">2</span>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox"></div>
+              <span class="task-id">STO-133</span>
+              <span class="task-title">Pour driveway apron — waiting on city permit</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#5e6ad2;">MR</div>
+                <span class="assignee-name">Marco R.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill blocked"><span class="status-dot blocked"></span>Blocked</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active urgent" style="height:4px;"></div>
+                  <div class="priority-bar active urgent" style="height:7px;"></div>
+                  <div class="priority-bar active urgent" style="height:10px;"></div>
+                  <div class="priority-bar active urgent" style="height:12px;"></div>
+                </div>
+                Urgent
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date overdue">Apr 1</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox"></div>
+              <span class="task-id">STO-127</span>
+              <span class="task-title">Fence installation — posts on hold (utility locate)</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#e5796a;">JT</div>
+                <span class="assignee-name">Jake T.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill blocked"><span class="status-dot blocked"></span>Blocked</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active high" style="height:4px;"></div>
+                  <div class="priority-bar active high" style="height:7px;"></div>
+                  <div class="priority-bar active high" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                High
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date overdue">Apr 2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- GROUP: DONE -->
+        <div class="task-group">
+          <div class="task-group-header">
+            <svg class="task-group-chevron icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3l5 5-5 5"/></svg>
+            <div class="task-group-status-dot" style="background: var(--status-done);"></div>
+            <span class="task-group-title">Done</span>
+            <span class="task-group-count">8</span>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox done"></div>
+              <span class="task-id">STO-120</span>
+              <span class="task-title done">Demolish existing concrete patio</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#e5796a;">JT</div>
+                <span class="assignee-name">Jake T.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill done"><span class="status-dot done"></span>Done</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active urgent" style="height:4px;"></div>
+                  <div class="priority-bar active urgent" style="height:7px;"></div>
+                  <div class="priority-bar active urgent" style="height:10px;"></div>
+                  <div class="priority-bar active urgent" style="height:12px;"></div>
+                </div>
+                Urgent
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Mar 20</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox done"></div>
+              <span class="task-id">STO-118</span>
+              <span class="task-title done">Excavate and grade rear yard — 6" depth</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#5e6ad2;">MR</div>
+                <span class="assignee-name">Marco R.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill done"><span class="status-dot done"></span>Done</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active high" style="height:4px;"></div>
+                  <div class="priority-bar active high" style="height:7px;"></div>
+                  <div class="priority-bar active high" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                High
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Mar 22</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox done"></div>
+              <span class="task-id">STO-115</span>
+              <span class="task-title done">Install French drain system — perimeter</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#38bdf8;">DS</div>
+                <span class="assignee-name">Dan S.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill done"><span class="status-dot done"></span>Done</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active high" style="height:4px;"></div>
+                  <div class="priority-bar active high" style="height:7px;"></div>
+                  <div class="priority-bar active high" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                High
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Mar 24</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox done"></div>
+              <span class="task-id">STO-112</span>
+              <span class="task-title done">Pour front walkway — Phase 1 (entrance to porch)</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#5e6ad2;">MR</div>
+                <span class="assignee-name">Marco R.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill done"><span class="status-dot done"></span>Done</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active medium" style="height:4px;"></div>
+                  <div class="priority-bar active medium" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Medium
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Mar 26</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox done"></div>
+              <span class="task-id">STO-110</span>
+              <span class="task-title done">Survey property lines and mark setbacks</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#facc15;color:#08090a;">NK</div>
+                <span class="assignee-name">Nina K.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill done"><span class="status-dot done"></span>Done</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active medium" style="height:4px;"></div>
+                  <div class="priority-bar active medium" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Medium
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Mar 15</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox done"></div>
+              <span class="task-id">STO-108</span>
+              <span class="task-title done">Remove 3 mature trees (arborist approved)</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#4ade80;">AL</div>
+                <span class="assignee-name">Alex L.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill done"><span class="status-dot done"></span>Done</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active medium" style="height:4px;"></div>
+                  <div class="priority-bar active medium" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Medium
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Mar 18</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox done"></div>
+              <span class="task-id">STO-105</span>
+              <span class="task-title done">Client design review & approval sign-off</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#facc15;color:#08090a;">NK</div>
+                <span class="assignee-name">Nina K.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill done"><span class="status-dot done"></span>Done</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active low" style="height:4px;"></div>
+                  <div class="priority-bar" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Low
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Mar 10</span>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-cell">
+              <div class="task-checkbox done"></div>
+              <span class="task-id">STO-102</span>
+              <span class="task-title done">Initial site assessment and soil test</span>
+            </div>
+            <div class="task-cell">
+              <div class="assignee">
+                <div class="assignee-avatar" style="background:#38bdf8;">DS</div>
+                <span class="assignee-name">Dan S.</span>
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="status-pill done"><span class="status-dot done"></span>Done</span>
+            </div>
+            <div class="task-cell">
+              <div class="priority-indicator">
+                <div class="priority-bars">
+                  <div class="priority-bar active low" style="height:4px;"></div>
+                  <div class="priority-bar" style="height:7px;"></div>
+                  <div class="priority-bar" style="height:10px;"></div>
+                  <div class="priority-bar" style="height:12px;"></div>
+                </div>
+                Low
+              </div>
+            </div>
+            <div class="task-cell">
+              <span class="due-date">Mar 5</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUMMARY BAR -->
+      <div class="summary-bar">
+        <div class="summary-stat">
+          <span>Total:</span>
+          <span class="summary-stat-value">24 tasks</span>
+        </div>
+        <div class="summary-stat">
+          <span class="status-dot done" style="width:5px;height:5px;"></span>
+          <span class="summary-stat-value">8</span>
+          <span>done</span>
+        </div>
+        <div class="summary-stat">
+          <span class="status-dot in-progress" style="width:5px;height:5px;"></span>
+          <span class="summary-stat-value">6</span>
+          <span>active</span>
+        </div>
+        <div class="summary-stat">
+          <span class="status-dot blocked" style="width:5px;height:5px;"></span>
+          <span class="summary-stat-value">2</span>
+          <span>blocked</span>
+        </div>
+        <div class="summary-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 33%;"></div>
+          </div>
+          <span class="progress-text">33%</span>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
